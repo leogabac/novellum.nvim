@@ -22,6 +22,10 @@ local function build_command(root, subcommand, args, json)
   return argv
 end
 
+function M.argv(root, subcommand, args, json)
+  return build_command(root, subcommand, args, json)
+end
+
 local function normalize_error(result, parsed)
   if parsed and parsed.error and parsed.error.message then
     return parsed.error.message
