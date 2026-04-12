@@ -178,7 +178,7 @@ function M.compile(root, target)
       return
     end
     require("novellum.notify").info(("Compiled %s."):format(compile_target))
-  })
+  end)
 end
 
 function M.open_pdf(root, target)
