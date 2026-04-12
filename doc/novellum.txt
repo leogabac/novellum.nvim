@@ -1,0 +1,139 @@
+*novellum.nvim.txt*  Neovim integration for the novellum CLI
+
+INTRODUCTION                                                    *novellum.nvim*
+
+`novellum.nvim` provides a thin Neovim 0.12 client for the |novellum| CLI.
+The first version focuses on:
+
+- note lookup
+- stitch and compile workflows
+- link-target completion inside TeX buffers
+
+The plugin is intentionally small. `novellum` remains the source of truth for
+workspace actions and note data.
+
+==============================================================================
+SETUP                                                          *novellum-setup*
+
+The plugin auto-loads, but calling `setup()` is how you customize it:
+
+>lua
+  require('novellum').setup({
+    command = { 'novellum' },
+  })
+<
+
+`command` may be either a string or a list. A list is useful during local
+development when the CLI is not installed globally:
+
+>lua
+  require('novellum').setup({
+    command = {
+      'env',
+      'PYTHONPATH=/path/to/novellum/src',
+      'python',
+      '-m',
+      'novellum.cli',
+    },
+  })
+<
+
+==============================================================================
+COMMANDS                                                    *novellum-commands*
+
+                                                        *:NovellumFind*
+:NovellumFind
+        Open the note picker and jump to a chosen note.
+
+                                                      *:NovellumSearch*
+:NovellumSearch [query]
+        Search notes through `novellum search`. If `[query]` is omitted, the
+        plugin prompts for one.
+
+                                                    *:NovellumOpenNote*
+:NovellumOpenNote [reference]
+        Resolve a note ID or alias and open it directly. If `[reference]` is
+        omitted, falls back to the normal note picker.
+
+                                                      *:NovellumStitch*
+:NovellumStitch [args...]
+        Run `novellum stitch`.
+
+        With arguments:
+        the arguments are forwarded directly to the CLI.
+
+        Without arguments:
+        the plugin prompts for one of three modes:
+
+        - selected notes
+        - all notes
+        - one note category
+
+        Selected-note mode uses `mini.pick` when available. Inside the picker:
+
+        - `<CR>` stitches the current note
+        - `<M-CR>` stitches marked notes
+
+        The plugin then prompts for a title and optional output path.
+
+                                                     *:NovellumCompile*
+:NovellumCompile [target]
+        Run `novellum compile`. Common targets are `workspace` and `stitched`.
+
+                                                        *:NovellumOpen*
+:NovellumOpen [target]
+        Run `novellum open`. Common targets are `workspace` and `stitched`.
+
+                                                     *:NovellumRefresh*
+:NovellumRefresh
+        Refresh the cached note list used for lookup and completion.
+
+                                                      *:NovellumHealth*
+:NovellumHealth
+        Run `:checkhealth novellum`.
+
+==============================================================================
+PICKERS                                                      *novellum-picker*
+
+The preferred picker backend is `mini.pick`.
+
+Lookup pickers show:
+
+- note id
+- note type
+- note title
+- aliases
+
+Preview windows include:
+
+- metadata summary
+- note path
+- the first chunk of the note file
+
+If `mini.pick` is unavailable, the plugin falls back to |vim.ui.select()|.
+
+==============================================================================
+COMPLETION                                              *novellum-completion*
+
+Inside Novellum TeX workspaces, the plugin sets a buffer-local `omnifunc`
+which completes note IDs and aliases for `\nvlink{}` targets.
+
+Supported forms:
+
+- `\nvlink{target}`
+- `\nvlink[label]{target}`
+
+If `blink.cmp` is installed, the plugin also tries to enable blink's built-in
+`omni` source for `tex` and `plaintex` so the same completion function appears
+in the normal completion menu.
+
+==============================================================================
+NOTES                                                          *novellum-notes*
+
+- The plugin does not replace VimTeX or the LaTeX toolchain.
+- Compile and open actions are delegated to the CLI.
+- The plugin expects to run inside a valid Novellum workspace with a
+  `.novellum/config.toml`.
+
+==============================================================================
+vim:tw=78:ts=8:noet:ft=help:norl:

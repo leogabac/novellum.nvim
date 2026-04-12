@@ -29,6 +29,8 @@ The initial command surface now includes:
 * `:NovellumRefresh`
 * `:NovellumHealth`
 
+Neovim help is available in [doc/novellum.txt](doc/novellum.txt).
+
 ## Stitch Workflow
 
 `NovellumStitch` works in two modes:
