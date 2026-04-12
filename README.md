@@ -17,8 +17,21 @@ The initial command surface now includes:
 * `:NovellumFind`
 * `:NovellumSearch [query]`
 * `:NovellumOpenNote [reference]`
+* `:NovellumStitch [args...]`
+* `:NovellumCompile [target]`
+* `:NovellumOpen [target]`
 * `:NovellumRefresh`
 * `:NovellumHealth`
+
+## Stitch Workflow
+
+`NovellumStitch` works in two modes:
+
+* with arguments, it forwards them to `novellum stitch`
+* without arguments, it opens a note picker
+
+Inside `mini.pick`, `<CR>` stitches the current note and `<M-CR>` stitches the
+marked notes.
 
 ## Development Note
 

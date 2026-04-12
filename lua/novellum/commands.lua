@@ -27,6 +27,18 @@ function M.setup()
     require("novellum.notes").open_reference(root, opts.args)
   end), { nargs = "?" })
 
+  vim.api.nvim_create_user_command("NovellumStitch", with_root(function(root, opts)
+    require("novellum.documents").stitch(root, opts.fargs)
+  end), { nargs = "*" })
+
+  vim.api.nvim_create_user_command("NovellumCompile", with_root(function(root, opts)
+    require("novellum.documents").compile(root, opts.args)
+  end), { nargs = "?" })
+
+  vim.api.nvim_create_user_command("NovellumOpen", with_root(function(root, opts)
+    require("novellum.documents").open_pdf(root, opts.args)
+  end), { nargs = "?" })
+
   vim.api.nvim_create_user_command("NovellumRefresh", with_root(function(root)
     require("novellum.cache").refresh_notes(root, function(err, notes)
       if err ~= nil then
