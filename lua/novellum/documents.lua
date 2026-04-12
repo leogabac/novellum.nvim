@@ -35,19 +35,6 @@ local function notify_result(prefix, result)
   require("novellum.notify").info(message)
 end
 
-local function open_terminal_split(title)
-  local previous = vim.api.nvim_get_current_win()
-  vim.cmd("botright 12split")
-  vim.cmd("enew")
-  local win = vim.api.nvim_get_current_win()
-  local buf = vim.api.nvim_get_current_buf()
-  vim.api.nvim_win_set_height(win, 12)
-  vim.bo[buf].buflisted = false
-  vim.bo[buf].swapfile = false
-  vim.api.nvim_buf_set_name(buf, title)
-  return previous, win, buf
-end
-
 local function run_stitch(root, args)
   require("novellum.cli").run_plain(root, "stitch", args, function(err, result)
     if err ~= nil then
@@ -181,31 +168,17 @@ end
 
 function M.compile(root, target)
   local compile_target = target ~= "" and target or "stitched"
-  local argv = require("novellum.cli").argv(root, "compile", { compile_target }, false)
-  local previous_win, _, terminal_buf = open_terminal_split(("novellum compile %s"):format(compile_target))
-
-  vim.fn.termopen(argv, {
-    cwd = root,
-    on_exit = function(_, code)
-      vim.schedule(function()
-        if code == 0 then
-          require("novellum.notify").info(("Compiled %s."):format(compile_target))
-        else
-          require("novellum.notify").error(("Compile failed for %s."):format(compile_target))
-          if require("novellum.config").get().documents.quickfix_on_compile_error then
-            populate_quickfix(
-              "Novellum Compile",
-              table.concat(vim.api.nvim_buf_get_lines(terminal_buf, 0, -1, false), "\n")
-            )
-          end
-        end
-        if vim.api.nvim_win_is_valid(previous_win) then
-          vim.api.nvim_set_current_win(previous_win)
-        end
-      end)
-    end,
+  require("novellum.notify").info(("Compiling %s..."):format(compile_target))
+  require("novellum.cli").run_plain(root, "compile", { compile_target }, function(err, result)
+    if err ~= nil then
+      require("novellum.notify").error(("Compile failed for %s."):format(compile_target))
+      if require("novellum.config").get().documents.quickfix_on_compile_error then
+        populate_quickfix("Novellum Compile", (result.stdout or "") .. "\n" .. (result.stderr or ""))
+      end
+      return
+    end
+    require("novellum.notify").info(("Compiled %s."):format(compile_target))
   })
-  vim.cmd("startinsert")
 end
 
 function M.open_pdf(root, target)
