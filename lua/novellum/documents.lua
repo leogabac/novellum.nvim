@@ -1,5 +1,15 @@
 local M = {}
 
+local stitch_categories = {
+  { label = "concept", flag = "--concepts" },
+  { label = "proof", flag = "--proofs" },
+  { label = "paper", flag = "--papers" },
+  { label = "experiment", flag = "--experiments" },
+  { label = "question", flag = "--questions" },
+  { label = "log", flag = "--logs" },
+  { label = "ref", flag = "--refs" },
+}
+
 local function populate_quickfix(title, content)
   local lines = vim.split(content or "", "\n", { trimempty = true })
   if #lines == 0 then
@@ -45,40 +55,115 @@ local function prompt_title(callback)
   end)
 end
 
+local function prompt_output(callback)
+  vim.ui.input({ prompt = "Output path (optional): " }, function(input)
+    if input == nil then
+      return
+    end
+    callback(vim.trim(input))
+  end)
+end
+
+local function with_stitch_metadata(callback)
+  prompt_title(function(title)
+    prompt_output(function(output)
+      callback(title, output)
+    end)
+  end)
+end
+
+local function append_common_stitch_options(args, title, output)
+  table.insert(args, "--title")
+  table.insert(args, title)
+  if output ~= nil and output ~= "" then
+    table.insert(args, "--output")
+    table.insert(args, output)
+  end
+  return args
+end
+
+local function prompt_category(callback)
+  vim.ui.select(stitch_categories, {
+    prompt = "Stitch category",
+    format_item = function(item)
+      return item.label
+    end,
+  }, function(item)
+    if item == nil then
+      return
+    end
+    callback(item)
+  end)
+end
+
+local function prompt_stitch_mode(callback)
+  vim.ui.select({
+    { mode = "selected", label = "Selected notes" },
+    { mode = "all", label = "All notes" },
+    { mode = "category", label = "By category" },
+  }, {
+    prompt = "Stitch mode",
+    format_item = function(item)
+      return item.label
+    end,
+  }, function(item)
+    if item == nil then
+      return
+    end
+    callback(item.mode)
+  end)
+end
+
 function M.stitch(root, args)
   if args ~= nil and #args > 0 then
     run_stitch(root, args)
     return
   end
 
-  require("novellum.notify").info("Use <C-x> to mark notes and <M-CR> to stitch marked notes in mini.pick.")
-  local notes, err = require("novellum.cache").get_notes(root)
-  if err ~= nil then
-    require("novellum.notify").error(err)
-    return
-  end
+  prompt_stitch_mode(function(mode)
+    if mode == "all" then
+      with_stitch_metadata(function(title, output)
+        run_stitch(root, append_common_stitch_options({ "--all" }, title, output))
+      end)
+      return
+    end
 
-  require("novellum.picker").pick_notes(root, notes, {
-    name = "Novellum Stitch",
-    on_choice = function(note)
-      prompt_title(function(title)
-        run_stitch(root, { note.id, "--title", title })
+    if mode == "category" then
+      prompt_category(function(category)
+        with_stitch_metadata(function(title, output)
+          run_stitch(root, append_common_stitch_options({ category.flag }, title, output))
+        end)
       end)
-    end,
-    on_choice_marked = function(selected)
-      if #selected == 0 then
-        return
-      end
-      prompt_title(function(title)
-        local stitch_args = vim.tbl_map(function(note)
-          return note.id
-        end, selected)
-        table.insert(stitch_args, "--title")
-        table.insert(stitch_args, title)
-        run_stitch(root, stitch_args)
-      end)
-    end,
-  })
+      return
+    end
+
+    require("novellum.notify").info("Use <C-x> to mark notes and <M-CR> to stitch marked notes in mini.pick.")
+    local notes, err = require("novellum.cache").get_notes(root)
+    if err ~= nil then
+      require("novellum.notify").error(err)
+      return
+    end
+
+    require("novellum.picker").pick_notes(root, notes, {
+      name = "Novellum Stitch",
+      on_choice = function(note)
+        with_stitch_metadata(function(title, output)
+          run_stitch(root, append_common_stitch_options({ note.id }, title, output))
+        end)
+      end,
+      on_choice_marked = function(selected)
+        if #selected == 0 then
+          return
+        end
+        with_stitch_metadata(function(title, output)
+          local stitch_args = vim.tbl_map(function(note)
+            return note.id
+          end, selected)
+          run_stitch(root, append_common_stitch_options(stitch_args, title, output))
+        end)
+      end,
+    })
+  end)
 end
 
 function M.compile(root, target)

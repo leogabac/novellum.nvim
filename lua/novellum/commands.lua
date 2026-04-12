@@ -30,6 +30,8 @@ local function complete_stitch_args(arglead)
       table.insert(items, flag)
     end
   end
+  table.insert(items, "workspace")
+  table.insert(items, "stitched")
   return items
 end
 

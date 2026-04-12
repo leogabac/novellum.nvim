@@ -1,9 +1,15 @@
 # novellum.nvim
-A neovim plugin for the novellum CLI
+A neovim plugin for the [novellum](https://github.com/leogabac/novellum) CLI.
 
-## Status
+Novellum is a CLI linked LaTeX note system for research logbooks, that is, a wannabe Obsidian for LaTeX enthusiasts.
 
-Work in progress. The first implementation is being built around:
+# Status
+
+> [!NOTE]
+> This project is still early in development.
+> If you have ideas, open an _issue_.
+
+The first implementation is being built around:
 
 * note lookup
 * stitch and compile helpers
@@ -28,10 +34,17 @@ The initial command surface now includes:
 `NovellumStitch` works in two modes:
 
 * with arguments, it forwards them to `novellum stitch`
-* without arguments, it opens a note picker
+* without arguments, it prompts for stitch mode first
 
-Inside `mini.pick`, `<CR>` stitches the current note and `<M-CR>` stitches the
-marked notes.
+Interactive stitch modes:
+
+* selected notes via `mini.pick`
+* all notes
+* one note category
+
+For selected-note stitching inside `mini.pick`, `<CR>` stitches the current
+note and `<M-CR>` stitches the marked notes. The command then prompts for title
+and optional output path.
 
 ## Completion
 
@@ -52,7 +65,3 @@ require("novellum").setup({
   command = { "python", "-m", "novellum.cli" },
 })
 ```
-
-## Plan
-
-The initial implementation plan lives in [docs/plan.md](docs/plan.md).
