@@ -15,6 +15,18 @@ function M.setup()
     vim.cmd.checkhealth("novellum")
   end, {})
 
+  vim.api.nvim_create_user_command("NovellumFind", with_root(function(root)
+    require("novellum.notes").find(root)
+  end), {})
+
+  vim.api.nvim_create_user_command("NovellumSearch", with_root(function(root, opts)
+    require("novellum.notes").search(root, opts.args)
+  end), { nargs = "?" })
+
+  vim.api.nvim_create_user_command("NovellumOpenNote", with_root(function(root, opts)
+    require("novellum.notes").open_reference(root, opts.args)
+  end), { nargs = "?" })
+
   vim.api.nvim_create_user_command("NovellumRefresh", with_root(function(root)
     require("novellum.cache").refresh_notes(root, function(err, notes)
       if err ~= nil then

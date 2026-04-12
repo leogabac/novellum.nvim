@@ -1,7 +1,15 @@
 local M = {}
 
+local function command_prefix()
+  local configured = require("novellum.config").get().command
+  if type(configured) == "string" then
+    return { configured }
+  end
+  return vim.deepcopy(configured)
+end
+
 local function build_command(root, subcommand, args, json)
-  local argv = { require("novellum.config").get().command }
+  local argv = command_prefix()
   if json then
     table.insert(argv, "--json")
   end

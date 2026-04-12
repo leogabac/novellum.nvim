@@ -4,11 +4,12 @@ function M.check()
   vim.health.start("novellum.nvim")
 
   local config = require("novellum.config").get()
-  local novellum = vim.fn.executable(config.command) == 1
+  local command = type(config.command) == "table" and config.command[1] or config.command
+  local novellum = vim.fn.executable(command) == 1
   if novellum then
-    vim.health.ok(("Found novellum executable: %s"):format(config.command))
+    vim.health.ok(("Found novellum executable: %s"):format(command))
   else
-    vim.health.error(("Could not find novellum executable: %s"):format(config.command))
+    vim.health.error(("Could not find novellum executable: %s"):format(command))
   end
 
   if vim.fn.has("nvim-0.12") == 1 then

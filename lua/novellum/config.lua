@@ -1,7 +1,7 @@
 local M = {}
 
 local defaults = {
-  command = "novellum",
+  command = { "novellum" },
   picker = {
     backend = "mini.pick",
   },
