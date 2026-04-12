@@ -38,10 +38,12 @@ end
 local function open_terminal_split(title)
   local previous = vim.api.nvim_get_current_win()
   vim.cmd("botright 12split")
+  vim.cmd("enew")
   local win = vim.api.nvim_get_current_win()
   local buf = vim.api.nvim_get_current_buf()
   vim.api.nvim_win_set_height(win, 12)
   vim.bo[buf].buflisted = false
+  vim.bo[buf].swapfile = false
   vim.api.nvim_buf_set_name(buf, title)
   return previous, win, buf
 end
