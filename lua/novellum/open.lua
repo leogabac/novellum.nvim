@@ -27,7 +27,9 @@ function M.from_modifier(path, modifier)
   elseif modifier == "tab split" then
     how = "tab"
   end
-  M.open(path, how)
+  vim.schedule(function()
+    M.open(path, how)
+  end)
 end
 
 return M

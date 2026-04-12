@@ -1,41 +1,55 @@
 local M = {}
 
-local function preview_lines(item)
-  local note = item.note
-  local lines = {
-    ("# %s"):format(note.title),
-    "",
-    ("id: %s"):format(note.id),
-    ("type: %s"):format(note.type),
-    ("path: %s"):format(note.path),
-    ("tags: %s"):format(#(note.tags or {}) > 0 and table.concat(note.tags, ", ") or "-"),
-    ("aliases: %s"):format(#(note.aliases or {}) > 0 and table.concat(note.aliases, ", ") or "-"),
-    "",
-    "---",
-    "",
-  }
-
-  local path = item.path
-  if path and vim.uv.fs_stat(path) then
-    local content = table.concat(vim.fn.readfile(path), "\n")
-    local body_lines = vim.split(content, "\n", { trimempty = false })
-    for index = 1, math.min(#body_lines, 40) do
-      table.insert(lines, body_lines[index])
-    end
-    if #body_lines > 40 then
-      table.insert(lines, "")
-      table.insert(lines, "... truncated ...")
-    end
-  else
-    table.insert(lines, "Preview unavailable.")
+local function get_icon(path)
+  local ok_mini, mini_icons = pcall(require, "mini.icons")
+  if ok_mini and mini_icons.get then
+    local icon, _, _ = mini_icons.get("file", path)
+    return icon or ""
   end
 
-  return lines
+  local ok_devicons, devicons = pcall(require, "nvim-web-devicons")
+  if ok_devicons and devicons.get_icon then
+    local icon = devicons.get_icon(path, nil, { default = true })
+    return icon or ""
+  end
+
+  return ""
+end
+
+local function preview_lines(item)
+  if not (item.path and vim.uv.fs_stat(item.path)) then
+    return { "Preview unavailable." }
+  end
+
+  return vim.fn.readfile(item.path)
+end
+
+local function preview_filetype(path)
+  local extension = path:match("%.([^.]+)$")
+  if extension == "tex" then
+    return "tex"
+  end
+  return extension or ""
+end
+
+local function shorten(value, width)
+  if vim.fn.strdisplaywidth(value) <= width then
+    return value .. string.rep(" ", width - vim.fn.strdisplaywidth(value))
+  end
+  local shortened = vim.fn.strcharpart(value, 0, math.max(width - 1, 1))
+  return shortened .. "…"
 end
 
 local function make_note_text(note)
-  local aliases = note.aliases and #note.aliases > 0 and table.concat(note.aliases, ",") or "-"
-  return ("%s\t%s\t%s\t%s"):format(note.id, note.type, note.title, aliases)
+  local icon = get_icon(note.path)
+  local aliases = note.aliases and #note.aliases > 0 and ("  {" .. table.concat(note.aliases, ", ") .. "}") or ""
+  return ("%s %s  [%s]  %s%s"):format(
+    icon,
+    shorten(note.id, 20),
+    shorten(note.type, 10):gsub("%s+$", ""),
+    note.title,
+    aliases
+  )
 end
 
 local function note_item(root, note)
@@ -70,7 +84,7 @@ function M.pick_notes(root, notes, opts)
         end,
         preview = function(buf_id, item)
           vim.api.nvim_buf_set_lines(buf_id, 0, -1, false, preview_lines(item))
-          vim.bo[buf_id].filetype = "markdown"
+          vim.bo[buf_id].filetype = preview_filetype(item.path)
         end,
         choose_marked = function(marked)
           if opts.on_choice_marked == nil then
