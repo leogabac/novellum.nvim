@@ -1,24 +1,90 @@
 # novellum.nvim
-A neovim plugin for the [novellum](https://github.com/leogabac/novellum) CLI.
 
-Novellum is a CLI linked LaTeX note system for research logbooks, that is, a wannabe Obsidian for LaTeX enthusiasts.
+Neovim integration for the
+[novellum](https://github.com/leogabac/novellum) CLI.
 
-# Status
+`novellum.nvim` is a thin Neovim client for a linked LaTeX note workflow.
+It keeps `novellum` as the source of truth for workspace operations and note
+data, while providing editor-native lookup, stitching, compilation, and
+completion inside TeX buffers.
 
-> [!NOTE]
-> This project is still early in development.
-> If you have ideas, open an _issue_.
+## Status
 
-The first implementation is being built around:
+`novellum.nvim` is approaching a first pre-release.
 
-* note lookup
-* stitch and compile helpers
-* `mini.pick` for selection
-* blink-friendly completion via `omnifunc`
+The current implementation is already usable for the core workflow, but the
+plugin is still evolving and the command surface may continue to tighten before
+the first tagged release.
 
-## Current Commands
+Current focus:
 
-The initial command surface now includes:
+* fast note lookup
+* stitching and compilation from inside Neovim
+* `mini.pick` integration for note selection
+* completion for `\nvlink{}` targets
+
+## Features
+
+* Note lookup with `mini.pick` previews
+* Search and direct note opening by ID or alias
+* Stitched document generation through `novellum stitch`
+* PDF compilation and opening through the existing CLI
+* Buffer-local completion for `\nvlink{}` targets in Novellum TeX workspaces
+* Blink-compatible completion via the built-in `omni` provider
+* Workspace-aware caching for note lookup and completion
+* Health checks and refresh commands
+
+## Requirements
+
+Minimum requirements:
+
+* Neovim `0.12+`
+* a working `novellum` CLI installation or command override
+
+Recommended integrations:
+
+* [`mini.pick`](https://github.com/echasnovski/mini.pick) for the best picker UX
+* [`blink.cmp`](https://github.com/Saghen/blink.cmp) if you want the completion
+  source to show up in the regular completion menu
+
+The plugin works without `mini.pick`, but falls back to `vim.ui.select()` and
+loses the richer picker experience.
+
+## Installation
+
+### `vim.pack`
+
+```lua
+vim.pack.add({
+  { src = "https://github.com/leogabac/novellum.nvim" },
+}, { load = true })
+```
+
+### Setup
+
+```lua
+require("novellum").setup({})
+```
+
+If `novellum` is not on your `PATH`, configure an explicit command:
+
+```lua
+require("novellum").setup({
+  command = {
+    "env",
+    "PYTHONPATH=/path/to/novellum/src",
+    "python",
+    "-m",
+    "novellum.cli",
+  },
+})
+```
+
+`command` may be either a string or a list.
+
+## Commands
+
+The current command surface includes:
 
 * `:NovellumFind`
 * `:NovellumSearch [query]`
@@ -29,41 +95,73 @@ The initial command surface now includes:
 * `:NovellumRefresh`
 * `:NovellumHealth`
 
+Some relevant comments:
+
+* `NovellumCompile` currently defaults to the `stitched` target.
+
 Neovim help is available in [doc/novellum.txt](doc/novellum.txt).
 
 ## Stitch Workflow
 
-`NovellumStitch` works in two modes:
+`NovellumStitch` supports two usage styles:
 
-* with arguments, it forwards them to `novellum stitch`
-* without arguments, it prompts for stitch mode first
+* direct forwarding to `novellum stitch` when you pass arguments
+* interactive mode when you call it with no arguments
 
-Interactive stitch modes:
+Interactive mode currently supports:
 
-* selected notes via `mini.pick`
+* selected notes
 * all notes
-* one note category
+* one category at a time
 
-For selected-note stitching inside `mini.pick`, `<CR>` stitches the current
-note and `<M-CR>` stitches the marked notes. The command then prompts for title
-and optional output path.
+When `mini.pick` is available:
+
+* `<CR>` stitches the current note
+* `<C-x>` marks notes
+* `<M-CR>` stitches marked notes
+
+The interactive stitch flow then prompts for:
+
+* document title
+* optional output path
 
 ## Completion
 
-The plugin installs buffer-local `omnifunc` completion for `\nvlink{}` targets
-inside Novellum TeX workspaces.
+Inside a Novellum TeX workspace, the plugin installs a buffer-local `omnifunc`
+for `\nvlink{}` targets.
 
-If `blink.cmp` is available, the plugin also tries to enable blink's `omni`
-provider for `tex` and `plaintex` so the same completion source shows up in the
-normal completion menu.
+Supported forms:
 
-## Development Note
+* `\nvlink{target}`
+* `\nvlink[label]{target}`
 
-`setup()` accepts `command` as either a string or a list. That makes local
-development easier when `novellum` is not installed globally yet. For example:
+If `blink.cmp` is installed, `novellum.nvim` also tries to expose the same
+completion source through blink's `omni` provider for `tex` and `plaintex`
+buffers.
 
-```lua
-require("novellum").setup({
-  command = { "python", "-m", "novellum.cli" },
-})
-```
+## Scope
+
+`novellum.nvim` is intentionally narrow.
+
+It does not try to replace:
+
+* VimTeX
+* your LaTeX toolchain
+* the `novellum` CLI itself
+
+The plugin is there to make the existing workflow easier to drive from inside
+Neovim, not to duplicate the full Novellum feature set in Lua.
+
+## Roadmap
+
+Near-term follow-up work includes:
+
+* add autocompletion for references
+* link and backlink browsing
+* broken-link diagnostics inside Neovim
+* better graph-aware note navigation
+* further cleanup of the stitch interaction flow
+
+## License
+
+[MIT](LICENSE)
