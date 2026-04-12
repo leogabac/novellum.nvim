@@ -107,9 +107,14 @@ function M.try_enable_blink()
     return
   end
 
+  local add_filetype_source = blink.add_filetype_source or blink.add_filetype_source_provider
+  if type(add_filetype_source) ~= "function" then
+    return
+  end
+
   for _, filetype in ipairs(configured_filetypes()) do
     if not blink_attached[filetype] then
-      blink.add_filetype_source_provider(filetype, "omni")
+      add_filetype_source(filetype, "omni")
       blink_attached[filetype] = true
     end
   end
