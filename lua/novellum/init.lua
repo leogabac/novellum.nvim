@@ -11,6 +11,7 @@ function M.setup(opts)
   initialized = true
 
   require("novellum.commands").setup()
+  require("novellum.completion").setup()
 end
 
 return M

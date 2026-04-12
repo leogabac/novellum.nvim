@@ -22,14 +22,20 @@ function M.find_root(start_path)
     path = vim.fs.dirname(path)
   end
 
-  local root = vim.fs.find(function(name, candidate)
-    return name == ".novellum" and path_exists(candidate .. "/config.toml")
-  end, { upward = true, path = path, type = "directory" })[1]
+  local current = path
+  while current and current ~= "" do
+    if is_workspace_root(current) then
+      return current
+    end
 
-  if root == nil then
-    return nil
+    local parent = vim.fs.dirname(current)
+    if parent == current then
+      break
+    end
+    current = parent
   end
-  return vim.fs.dirname(root)
+
+  return nil
 end
 
 function M.root_for_buf(bufnr)

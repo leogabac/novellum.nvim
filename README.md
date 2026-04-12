@@ -33,6 +33,15 @@ The initial command surface now includes:
 Inside `mini.pick`, `<CR>` stitches the current note and `<M-CR>` stitches the
 marked notes.
 
+## Completion
+
+The plugin installs buffer-local `omnifunc` completion for `\nvlink{}` targets
+inside Novellum TeX workspaces.
+
+If `blink.cmp` is available, the plugin also tries to enable blink's `omni`
+provider for `tex` and `plaintex` so the same completion source shows up in the
+normal completion menu.
+
 ## Development Note
 
 `setup()` accepts `command` as either a string or a list. That makes local
