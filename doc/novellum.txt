@@ -76,6 +76,11 @@ COMMANDS                                                    *novellum-commands*
 
         The plugin then prompts for a title and optional output path.
 
+                                               *:NovellumStitchCurrent*
+:NovellumStitchCurrent
+        Stitch the current note directly, then prompt for a title and
+        optional output path.
+
                                                       *:NovellumCompile*
 :NovellumCompile [target]
         Run `novellum compile`. Common targets are `workspace` and `stitched`.

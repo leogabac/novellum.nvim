@@ -66,6 +66,10 @@ function M.setup()
     require("novellum.documents").stitch(root, opts.fargs)
   end), { nargs = "*", complete = complete_stitch_args })
 
+  vim.api.nvim_create_user_command("NovellumStitchCurrent", with_root(function(root)
+    require("novellum.documents").stitch_current(root)
+  end), {})
+
   vim.api.nvim_create_user_command("NovellumCompile", with_root(function(root, opts)
     require("novellum.documents").compile(root, opts.args)
   end), { nargs = "?", complete = complete_document_targets })

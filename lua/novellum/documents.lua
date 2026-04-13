@@ -139,42 +139,53 @@ local function current_note_id(root, notes)
   return nil
 end
 
+local function current_note(root, notes)
+  local id = current_note_id(root, notes)
+  if id == nil then
+    return nil
+  end
+
+  for _, note in ipairs(notes) do
+    if note.id == id then
+      return note
+    end
+  end
+
+  return nil
+end
+
+local function record_session(root, stitch_args)
+  require("novellum.build").set_session({
+    root = root,
+    stitch_args = vim.deepcopy(stitch_args),
+    compile_target = "stitched",
+  })
+end
+
+local function stitch_with_metadata(root, base_args)
+  with_stitch_metadata(function(title, output)
+    local stitch_args = append_common_stitch_options(vim.deepcopy(base_args), title, output)
+    record_session(root, stitch_args)
+    run_stitch(root, stitch_args)
+  end)
+end
+
 function M.stitch(root, args)
   if args ~= nil and #args > 0 then
-    require("novellum.build").set_session({
-      root = root,
-      stitch_args = vim.deepcopy(args),
-      compile_target = "stitched",
-    })
+    record_session(root, args)
     run_stitch(root, args)
     return
   end
 
   prompt_stitch_mode(function(mode)
     if mode == "all" then
-      with_stitch_metadata(function(title, output)
-        local stitch_args = append_common_stitch_options({ "--all" }, title, output)
-        require("novellum.build").set_session({
-          root = root,
-          stitch_args = vim.deepcopy(stitch_args),
-          compile_target = "stitched",
-        })
-        run_stitch(root, stitch_args)
-      end)
+      stitch_with_metadata(root, { "--all" })
       return
     end
 
     if mode == "category" then
       prompt_category(function(category)
-        with_stitch_metadata(function(title, output)
-          local stitch_args = append_common_stitch_options({ category.flag }, title, output)
-          require("novellum.build").set_session({
-            root = root,
-            stitch_args = vim.deepcopy(stitch_args),
-            compile_target = "stitched",
-          })
-          run_stitch(root, stitch_args)
-        end)
+        stitch_with_metadata(root, { category.flag })
       end)
       return
     end
@@ -192,35 +203,35 @@ function M.stitch(root, args)
       pre_mark_ids = active_note_id ~= nil and { active_note_id } or {},
       initial_current_id = active_note_id,
       on_choice = function(note)
-        with_stitch_metadata(function(title, output)
-          local stitch_args = append_common_stitch_options({ note.id }, title, output)
-          require("novellum.build").set_session({
-            root = root,
-            stitch_args = vim.deepcopy(stitch_args),
-            compile_target = "stitched",
-          })
-          run_stitch(root, stitch_args)
-        end)
+        stitch_with_metadata(root, { note.id })
       end,
       on_choice_marked = function(selected)
         if #selected == 0 then
           return
         end
-        with_stitch_metadata(function(title, output)
-          local stitch_args = vim.tbl_map(function(note)
-            return note.id
-          end, selected)
-          stitch_args = append_common_stitch_options(stitch_args, title, output)
-          require("novellum.build").set_session({
-            root = root,
-            stitch_args = vim.deepcopy(stitch_args),
-            compile_target = "stitched",
-          })
-          run_stitch(root, stitch_args)
-        end)
+        local stitch_args = vim.tbl_map(function(note)
+          return note.id
+        end, selected)
+        stitch_with_metadata(root, stitch_args)
       end,
     })
   end)
+end
+
+function M.stitch_current(root)
+  local notes, err = require("novellum.cache").get_notes(root)
+  if err ~= nil then
+    require("novellum.notify").error(err)
+    return
+  end
+
+  local note = current_note(root, notes)
+  if note == nil then
+    require("novellum.notify").warn("Current buffer is not a Novellum note.")
+    return
+  end
+
+  stitch_with_metadata(root, { note.id })
 end
 
 function M.compile(root, target, callback, opts)

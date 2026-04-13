@@ -93,6 +93,7 @@ The current command surface includes:
 * `:NovellumSearch [query]`
 * `:NovellumOpenNote [reference]`
 * `:NovellumStitch [args...]`
+* `:NovellumStitchCurrent`
 * `:NovellumCompile [target]`
 * `:NovellumBuildNow`
 * `:NovellumBuildStart`
@@ -114,6 +115,9 @@ Neovim help is available in [doc/novellum.txt](doc/novellum.txt).
 
 * direct forwarding to `novellum stitch` when you pass arguments
 * interactive mode when you call it with no arguments
+
+`NovellumStitchCurrent` is the fastest path when you are editing one note and
+want to stitch that note immediately.
 
 Interactive mode currently supports:
 
