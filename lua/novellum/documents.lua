@@ -223,7 +223,6 @@ end
 
 function M.compile(root, target, callback)
   local compile_target = target ~= "" and target or "stitched"
-  require("novellum.notify").info(("Compiling %s..."):format(compile_target))
   require("novellum.cli").run_plain(root, "compile", { compile_target }, function(err, result)
     if err ~= nil then
       require("novellum.notify").error(("Compile failed for %s."):format(compile_target))

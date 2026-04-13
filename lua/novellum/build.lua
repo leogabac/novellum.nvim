@@ -8,6 +8,23 @@ local state = {
   timer = nil,
 }
 
+local function update_watch_notification()
+  if not state.watch_enabled then
+    require("novellum.notify").dismiss("watch")
+    return
+  end
+
+  local session = state.session
+  local args = session and table.concat(session.stitch_args or {}, " ") or "no session"
+  local run_state = state.running and "running" or (state.pending and "pending" or "idle")
+  require("novellum.notify").upsert(
+    "watch",
+    ("Novellum watch active\nstate: %s\nsession: %s"):format(run_state, args),
+    vim.log.levels.INFO,
+    { timeout = false }
+  )
+end
+
 local function is_note_buffer(root, path)
   if path == nil or path == "" then
     return false
@@ -33,6 +50,7 @@ end
 
 function M.set_session(session)
   state.session = vim.deepcopy(session)
+  update_watch_notification()
 end
 
 function M.get_session()
@@ -53,7 +71,7 @@ function M.start_watch()
     return false
   end
   state.watch_enabled = true
-  require("novellum.notify").info("Novellum auto build enabled.")
+  update_watch_notification()
   return true
 end
 
@@ -61,6 +79,7 @@ function M.stop_watch()
   state.watch_enabled = false
   state.pending = false
   stop_timer()
+  require("novellum.notify").dismiss("watch")
   require("novellum.notify").info("Novellum auto build disabled.")
 end
 
@@ -85,20 +104,23 @@ function M.run_now()
 
   if state.running then
     state.pending = true
+    update_watch_notification()
     return
   end
 
   state.running = true
-  require("novellum.notify").info("Rebuilding last Novellum stitch...")
+  update_watch_notification()
   require("novellum.documents").run_session(session, function(ok)
     state.running = false
     if state.pending then
+      update_watch_notification()
       state.pending = false
       M.run_now()
       return
     end
 
-    if ok then
+    update_watch_notification()
+    if ok and not state.watch_enabled then
       require("novellum.notify").info("Novellum rebuild finished.")
     end
   end)
