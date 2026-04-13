@@ -134,6 +134,8 @@ In the stitch picker, marking uses:
 
 `<C-m>` is intentionally not used because terminal Neovim usually normalizes it
 to the same input as `<CR>`.
+For this picker, `novellum.nvim` also disables mini.pick's default `<C-b>`
+preview-page-up mapping so marking stays conflict free.
 
 ==============================================================================
 COMPLETION                                              *novellum-completion*
@@ -171,10 +173,9 @@ selection again.
 - debounces repeated saves
 - avoids overlapping runs by queueing one pending rebuild
 
-When `nvim-notify` is installed, watch mode can use a persistent status
-notification instead of separate transient messages for every rebuild.
-Rebuilds also suppress the usual stitch/compile success messages so the watch
-status remains the main signal.
+When `nvim-notify` is installed, watch mode shows a persistent notification
+only while a rebuild is running or queued. Idle watch mode stays quiet, and
+rebuilds suppress the usual stitch/compile success messages.
 
 ==============================================================================
 NOTES                                                          *novellum-notes*

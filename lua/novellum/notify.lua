@@ -57,17 +57,28 @@ function M.upsert(key, message, level, opts)
   return state.ids[key]
 end
 
-function M.dismiss(key)
+function M.clear(key, message, level, opts)
+  if not should_notify() then
+    state.ids[key] = nil
+    return
+  end
+
   local id = state.ids[key]
   if id == nil then
     return
   end
 
-  local _, notify = backend()
-  if notify ~= nil and type(notify.dismiss) == "function" then
-    notify.dismiss({ pending = false, silent = true, id = id })
-  end
-  state.ids[key] = nil
+  local send = backend()
+  send(message or " ", level or vim.log.levels.INFO, notify_opts(vim.tbl_deep_extend("force", {
+    replace = id,
+    timeout = 800,
+    hide_from_history = true,
+    on_close = function()
+      if state.ids[key] == id then
+        state.ids[key] = nil
+      end
+    end,
+  }, opts or {})))
 end
 
 return M

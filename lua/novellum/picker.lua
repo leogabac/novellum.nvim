@@ -105,6 +105,7 @@ function M.pick_notes(root, notes, opts)
     MiniPick.start({
       mappings = vim.tbl_deep_extend("force", {
         mark = "",
+        scroll_up = "",
         mark_alt = {
           char = "<C-b>",
           func = toggle_current_mark,

@@ -10,19 +10,26 @@ local state = {
 
 local function update_watch_notification()
   if not state.watch_enabled then
-    require("novellum.notify").dismiss("watch")
+    require("novellum.notify").clear("watch")
+    return
+  end
+
+  if not state.running and not state.pending then
+    require("novellum.notify").clear("watch", "Novellum watch idle", vim.log.levels.INFO, {
+      timeout = 600,
+    })
     return
   end
 
   local session = state.session
   local args = session and table.concat(session.stitch_args or {}, " ") or "no session"
-  local run_state = state.running and "running" or (state.pending and "pending" or "idle")
-  require("novellum.notify").upsert(
-    "watch",
-    ("Novellum watch active\nstate: %s\nsession: %s"):format(run_state, args),
-    vim.log.levels.INFO,
-    { timeout = false }
-  )
+  local message = state.pending
+      and ("Novellum watch queued\nsession: %s"):format(args)
+    or ("Novellum watch rebuilding\nsession: %s"):format(args)
+  require("novellum.notify").upsert("watch", message, vim.log.levels.INFO, {
+    timeout = false,
+    hide_from_history = true,
+  })
 end
 
 local function is_note_buffer(root, path)
@@ -71,7 +78,7 @@ function M.start_watch()
     return false
   end
   state.watch_enabled = true
-  update_watch_notification()
+  require("novellum.notify").info("Novellum watch enabled.")
   return true
 end
 
@@ -79,8 +86,9 @@ function M.stop_watch()
   state.watch_enabled = false
   state.pending = false
   stop_timer()
-  require("novellum.notify").dismiss("watch")
-  require("novellum.notify").info("Novellum auto build disabled.")
+  require("novellum.notify").clear("watch", "Novellum watch stopped", vim.log.levels.INFO, {
+    timeout = 500,
+  })
 end
 
 function M.status()

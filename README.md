@@ -129,6 +129,8 @@ When `mini.pick` is available:
 
 `<C-m>` was considered for marking, but in terminal Neovim it usually collapses
 to the same input as `<CR>`, so it is not reliable as a separate picker action.
+For the stitch picker specifically, `novellum.nvim` gives `<C-b>` priority over
+mini.pick's default preview-page-up mapping.
 
 The interactive stitch flow then prompts for:
 
@@ -153,10 +155,9 @@ Available commands:
 Auto rebuild currently watches note saves inside the same Novellum workspace,
 debounces repeated writes, and avoids overlapping builds.
 
-With `nvim-notify`, watch mode can keep a single persistent status notification
-updated instead of emitting separate start/finish messages for every rebuild.
-Rebuilds also suppress the regular stitch/compile success messages so the watch
-status remains the main signal.
+With `nvim-notify`, watch mode shows a persistent notification only while a
+rebuild is running or queued. Idle watch mode is kept quiet, and rebuilds
+suppress the regular stitch/compile success messages.
 
 ## Completion
 
