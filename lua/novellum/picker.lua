@@ -72,10 +72,41 @@ function M.pick_notes(root, notes, opts)
 
   if mini_pick_available() then
     local MiniPick = require("mini.pick")
+    local pre_mark_ids = {}
+    for _, note_id in ipairs(opts.pre_mark_ids or {}) do
+      pre_mark_ids[note_id] = true
+    end
+
     MiniPick.start({
       source = {
         name = opts.name or "Novellum Notes",
-        items = items,
+        items = function()
+          vim.schedule(function()
+            if not MiniPick.is_picker_active() then
+              return
+            end
+
+            local marked = {}
+            local current = nil
+            for index, item in ipairs(items) do
+              if pre_mark_ids[item.note.id] then
+                table.insert(marked, index)
+              end
+              if opts.initial_current_id ~= nil and item.note.id == opts.initial_current_id then
+                current = index
+              end
+            end
+
+            if #marked > 0 then
+              MiniPick.set_picker_match_inds(marked, "marked")
+            end
+            if current ~= nil then
+              MiniPick.set_picker_match_inds({ current }, "current")
+            end
+          end)
+
+          return items
+        end,
         choose = function(item, modifier)
           if item == nil or opts.on_choice == nil then
             return

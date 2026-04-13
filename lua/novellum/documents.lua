@@ -114,6 +114,23 @@ local function prompt_stitch_mode(callback)
   end)
 end
 
+local function current_note_id(root, notes)
+  local current_path = vim.api.nvim_buf_get_name(0)
+  if current_path == "" then
+    return nil
+  end
+
+  current_path = vim.fs.normalize(current_path)
+  for _, note in ipairs(notes) do
+    local note_path = vim.fs.normalize(root .. "/" .. note.path)
+    if note_path == current_path then
+      return note.id
+    end
+  end
+
+  return nil
+end
+
 function M.stitch(root, args)
   if args ~= nil and #args > 0 then
     run_stitch(root, args)
@@ -143,9 +160,12 @@ function M.stitch(root, args)
       require("novellum.notify").error(err)
       return
     end
+    local active_note_id = current_note_id(root, notes)
 
     require("novellum.picker").pick_notes(root, notes, {
       name = "Novellum Stitch",
+      pre_mark_ids = active_note_id ~= nil and { active_note_id } or {},
+      initial_current_id = active_note_id,
       on_choice = function(note)
         with_stitch_metadata(function(title, output)
           run_stitch(root, append_common_stitch_options({ note.id }, title, output))
