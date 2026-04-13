@@ -20,6 +20,10 @@ local function notify_opts(extra)
   return vim.tbl_deep_extend("force", { title = "novellum.nvim" }, extra or {})
 end
 
+local function record_id(record)
+  return type(record) == "table" and record.id or record
+end
+
 function M.info(message)
   if not should_notify() then
     return
@@ -50,10 +54,23 @@ function M.upsert(key, message, level, opts)
   end
 
   local send = backend()
-  local id = send(message, level or vim.log.levels.INFO, notify_opts(vim.tbl_deep_extend("force", {
-    replace = state.ids[key],
-  }, opts or {})))
-  state.ids[key] = id or state.ids[key]
+  local previous = state.ids[key]
+  local extra = vim.tbl_deep_extend("force", {
+    replace = previous,
+  }, opts or {})
+  local user_on_close = extra.on_close
+  local current = nil
+  extra.on_close = function(...)
+    if user_on_close ~= nil then
+      user_on_close(...)
+    end
+    if record_id(state.ids[key]) == record_id(current) then
+      state.ids[key] = nil
+    end
+  end
+
+  current = send(message, level or vim.log.levels.INFO, notify_opts(extra))
+  state.ids[key] = current or previous
   return state.ids[key]
 end
 
@@ -67,17 +84,13 @@ function M.clear(key, message, level, opts)
   if id == nil then
     return
   end
+  state.ids[key] = nil
 
   local send = backend()
   send(message or " ", level or vim.log.levels.INFO, notify_opts(vim.tbl_deep_extend("force", {
     replace = id,
     timeout = 800,
     hide_from_history = true,
-    on_close = function()
-      if state.ids[key] == id then
-        state.ids[key] = nil
-      end
-    end,
   }, opts or {})))
 end
 
