@@ -76,8 +76,40 @@ function M.pick_notes(root, notes, opts)
     for _, note_id in ipairs(opts.pre_mark_ids or {}) do
       pre_mark_ids[note_id] = true
     end
+    local function toggle_current_mark()
+      if not MiniPick.is_picker_active() then
+        return
+      end
+
+      local matches = MiniPick.get_picker_matches()
+      if matches == nil or matches.current_ind == nil then
+        return
+      end
+
+      local marked = {}
+      local current_marked = false
+      for _, index in ipairs(matches.marked_inds or {}) do
+        if index == matches.current_ind then
+          current_marked = true
+        else
+          table.insert(marked, index)
+        end
+      end
+      if not current_marked then
+        table.insert(marked, matches.current_ind)
+      end
+      table.sort(marked)
+      MiniPick.set_picker_match_inds(marked, "marked")
+    end
 
     MiniPick.start({
+      mappings = vim.tbl_deep_extend("force", {
+        mark = "",
+        mark_alt = {
+          char = "<C-b>",
+          func = toggle_current_mark,
+        },
+      }, opts.mappings or {}),
       source = {
         name = opts.name or "Novellum Notes",
         items = function()

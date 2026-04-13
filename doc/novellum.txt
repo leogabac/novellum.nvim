@@ -128,6 +128,13 @@ Preview windows include:
 
 If `mini.pick` is unavailable, the plugin falls back to |vim.ui.select()|.
 
+In the stitch picker, marking uses:
+
+- `<C-b>` to toggle the current note mark
+
+`<C-m>` is intentionally not used because terminal Neovim usually normalizes it
+to the same input as `<CR>`.
+
 ==============================================================================
 COMPLETION                                              *novellum-completion*
 
@@ -163,6 +170,10 @@ selection again.
 - reacts only to `.tex` note files inside the same Novellum workspace
 - debounces repeated saves
 - avoids overlapping runs by queueing one pending rebuild
+
+When `nvim-notify` is installed and wired into |vim.notify()|, watch mode can
+use a persistent status notification instead of separate transient messages for
+every rebuild.
 
 ==============================================================================
 NOTES                                                          *novellum-notes*

@@ -46,6 +46,9 @@ Recommended integrations:
 * [`mini.pick`](https://github.com/echasnovski/mini.pick) for the best picker UX
 * [`blink.cmp`](https://github.com/Saghen/blink.cmp) if you want the completion
   source to show up in the regular completion menu
+* [`nvim-notify`](https://github.com/rcarriga/nvim-notify) if you want
+  persistent watch-mode notifications instead of plain transient `vim.notify`
+  messages
 
 The plugin works without `mini.pick`, but falls back to `vim.ui.select()` and
 loses the richer picker experience.
@@ -121,8 +124,11 @@ Interactive mode currently supports:
 When `mini.pick` is available:
 
 * `<CR>` stitches the current note
-* `<C-x>` marks notes
+* `<C-b>` marks notes in the stitch picker
 * `<M-CR>` stitches marked notes
+
+`<C-m>` was considered for marking, but in terminal Neovim it usually collapses
+to the same input as `<CR>`, so it is not reliable as a separate picker action.
 
 The interactive stitch flow then prompts for:
 
@@ -146,6 +152,9 @@ Available commands:
 
 Auto rebuild currently watches note saves inside the same Novellum workspace,
 debounces repeated writes, and avoids overlapping builds.
+
+With `nvim-notify`, watch mode can keep a single persistent status notification
+updated instead of emitting separate start/finish messages for every rebuild.
 
 ## Completion
 
