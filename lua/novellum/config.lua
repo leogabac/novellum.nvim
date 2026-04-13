@@ -12,6 +12,7 @@ local defaults = {
   documents = {
     open_after_stitch = false,
     quickfix_on_compile_error = true,
+    debounce_ms = 700,
   },
   completion = {
     enabled = true,

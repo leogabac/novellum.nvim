@@ -35,13 +35,19 @@ local function notify_result(prefix, result)
   require("novellum.notify").info(message)
 end
 
-local function run_stitch(root, args)
+local function run_stitch(root, args, callback)
   require("novellum.cli").run_plain(root, "stitch", args, function(err, result)
     if err ~= nil then
       require("novellum.notify").error(err)
+      if callback then
+        callback(false, result)
+      end
       return
     end
     notify_result("Stitch complete.", result)
+    if callback then
+      callback(true, result)
+    end
   end)
 end
 
@@ -133,6 +139,11 @@ end
 
 function M.stitch(root, args)
   if args ~= nil and #args > 0 then
+    require("novellum.build").set_session({
+      root = root,
+      stitch_args = vim.deepcopy(args),
+      compile_target = "stitched",
+    })
     run_stitch(root, args)
     return
   end
@@ -140,7 +151,13 @@ function M.stitch(root, args)
   prompt_stitch_mode(function(mode)
     if mode == "all" then
       with_stitch_metadata(function(title, output)
-        run_stitch(root, append_common_stitch_options({ "--all" }, title, output))
+        local stitch_args = append_common_stitch_options({ "--all" }, title, output)
+        require("novellum.build").set_session({
+          root = root,
+          stitch_args = vim.deepcopy(stitch_args),
+          compile_target = "stitched",
+        })
+        run_stitch(root, stitch_args)
       end)
       return
     end
@@ -148,7 +165,13 @@ function M.stitch(root, args)
     if mode == "category" then
       prompt_category(function(category)
         with_stitch_metadata(function(title, output)
-          run_stitch(root, append_common_stitch_options({ category.flag }, title, output))
+          local stitch_args = append_common_stitch_options({ category.flag }, title, output)
+          require("novellum.build").set_session({
+            root = root,
+            stitch_args = vim.deepcopy(stitch_args),
+            compile_target = "stitched",
+          })
+          run_stitch(root, stitch_args)
         end)
       end)
       return
@@ -168,7 +191,13 @@ function M.stitch(root, args)
       initial_current_id = active_note_id,
       on_choice = function(note)
         with_stitch_metadata(function(title, output)
-          run_stitch(root, append_common_stitch_options({ note.id }, title, output))
+          local stitch_args = append_common_stitch_options({ note.id }, title, output)
+          require("novellum.build").set_session({
+            root = root,
+            stitch_args = vim.deepcopy(stitch_args),
+            compile_target = "stitched",
+          })
+          run_stitch(root, stitch_args)
         end)
       end,
       on_choice_marked = function(selected)
@@ -179,14 +208,20 @@ function M.stitch(root, args)
           local stitch_args = vim.tbl_map(function(note)
             return note.id
           end, selected)
-          run_stitch(root, append_common_stitch_options(stitch_args, title, output))
+          stitch_args = append_common_stitch_options(stitch_args, title, output)
+          require("novellum.build").set_session({
+            root = root,
+            stitch_args = vim.deepcopy(stitch_args),
+            compile_target = "stitched",
+          })
+          run_stitch(root, stitch_args)
         end)
       end,
     })
   end)
 end
 
-function M.compile(root, target)
+function M.compile(root, target, callback)
   local compile_target = target ~= "" and target or "stitched"
   require("novellum.notify").info(("Compiling %s..."):format(compile_target))
   require("novellum.cli").run_plain(root, "compile", { compile_target }, function(err, result)
@@ -195,9 +230,32 @@ function M.compile(root, target)
       if require("novellum.config").get().documents.quickfix_on_compile_error then
         populate_quickfix("Novellum Compile", (result.stdout or "") .. "\n" .. (result.stderr or ""))
       end
+      if callback then
+        callback(false, result)
+      end
       return
     end
     require("novellum.notify").info(("Compiled %s."):format(compile_target))
+    if callback then
+      callback(true, result)
+    end
+  end)
+end
+
+function M.run_session(session, callback)
+  run_stitch(session.root, session.stitch_args, function(ok)
+    if not ok then
+      if callback then
+        callback(false)
+      end
+      return
+    end
+
+    M.compile(session.root, session.compile_target or "stitched", function(compiled)
+      if callback then
+        callback(compiled)
+      end
+    end)
   end)
 end
 

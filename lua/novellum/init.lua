@@ -12,6 +12,7 @@ function M.setup(opts)
 
   require("novellum.commands").setup()
   require("novellum.completion").setup()
+  require("novellum.build").setup()
 end
 
 return M

@@ -76,9 +76,25 @@ COMMANDS                                                    *novellum-commands*
 
         The plugin then prompts for a title and optional output path.
 
-                                                     *:NovellumCompile*
+                                                      *:NovellumCompile*
 :NovellumCompile [target]
         Run `novellum compile`. Common targets are `workspace` and `stitched`.
+
+                                                    *:NovellumBuildNow*
+:NovellumBuildNow
+        Rerun the most recently recorded stitch session and compile it.
+
+                                                  *:NovellumBuildStart*
+:NovellumBuildStart
+        Enable auto rebuild on save for the current recorded build session.
+
+                                                   *:NovellumBuildStop*
+:NovellumBuildStop
+        Disable auto rebuild on save.
+
+                                                 *:NovellumBuildStatus*
+:NovellumBuildStatus
+        Report the current recorded build session, watch state, and run state.
 
                                                         *:NovellumOpen*
 :NovellumOpen [target]
@@ -126,6 +142,27 @@ Supported forms:
 If `blink.cmp` is installed, the plugin also tries to enable blink's built-in
 `omni` source for `tex` and `plaintex` so the same completion function appears
 in the normal completion menu.
+
+==============================================================================
+REBUILD LOOP                                                *novellum-rebuild*
+
+Every successful stitch records a build session inside the plugin.
+
+That session stores:
+
+- workspace root
+- exact stitch arguments
+- compile target
+
+The rebuild commands operate on that recorded session instead of prompting for
+selection again.
+
+`NovellumBuildStart` enables a simple auto rebuild loop:
+
+- watches `BufWritePost`
+- reacts only to `.tex` note files inside the same Novellum workspace
+- debounces repeated saves
+- avoids overlapping runs by queueing one pending rebuild
 
 ==============================================================================
 NOTES                                                          *novellum-notes*

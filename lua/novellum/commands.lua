@@ -70,6 +70,22 @@ function M.setup()
     require("novellum.documents").compile(root, opts.args)
   end), { nargs = "?", complete = complete_document_targets })
 
+  vim.api.nvim_create_user_command("NovellumBuildNow", function()
+    require("novellum.build").run_now()
+  end, {})
+
+  vim.api.nvim_create_user_command("NovellumBuildStart", function()
+    require("novellum.build").start_watch()
+  end, {})
+
+  vim.api.nvim_create_user_command("NovellumBuildStop", function()
+    require("novellum.build").stop_watch()
+  end, {})
+
+  vim.api.nvim_create_user_command("NovellumBuildStatus", function()
+    require("novellum.notify").info(require("novellum.build").status())
+  end, {})
+
   vim.api.nvim_create_user_command("NovellumOpen", with_root(function(root, opts)
     require("novellum.documents").open_pdf(root, opts.args)
   end), { nargs = "?", complete = complete_document_targets })

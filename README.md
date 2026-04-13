@@ -91,6 +91,10 @@ The current command surface includes:
 * `:NovellumOpenNote [reference]`
 * `:NovellumStitch [args...]`
 * `:NovellumCompile [target]`
+* `:NovellumBuildNow`
+* `:NovellumBuildStart`
+* `:NovellumBuildStop`
+* `:NovellumBuildStatus`
 * `:NovellumOpen [target]`
 * `:NovellumRefresh`
 * `:NovellumHealth`
@@ -124,6 +128,24 @@ The interactive stitch flow then prompts for:
 
 * document title
 * optional output path
+
+Every successful stitch also records a build session in the plugin. That lets
+you rebuild the same stitched selection without stepping through the picker
+again.
+
+## Rebuild Workflow
+
+The plugin now keeps track of the most recent stitch request.
+
+Available commands:
+
+* `:NovellumBuildNow` reruns the last stitch session and then compiles it
+* `:NovellumBuildStart` enables auto rebuild on save
+* `:NovellumBuildStop` disables auto rebuild on save
+* `:NovellumBuildStatus` reports the current build-session state
+
+Auto rebuild currently watches note saves inside the same Novellum workspace,
+debounces repeated writes, and avoids overlapping builds.
 
 ## Completion
 
