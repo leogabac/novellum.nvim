@@ -123,7 +123,7 @@ function M.run_now()
     if ok and not state.watch_enabled then
       require("novellum.notify").info("Novellum rebuild finished.")
     end
-  end)
+  end, { quiet_success = true })
 end
 
 function M.schedule_from_buffer(bufnr)

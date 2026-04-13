@@ -48,7 +48,7 @@ Recommended integrations:
   source to show up in the regular completion menu
 * [`nvim-notify`](https://github.com/rcarriga/nvim-notify) if you want
   persistent watch-mode notifications instead of plain transient `vim.notify`
-  messages
+  messages; `novellum.nvim` will use it directly when installed
 
 The plugin works without `mini.pick`, but falls back to `vim.ui.select()` and
 loses the richer picker experience.
@@ -155,6 +155,8 @@ debounces repeated writes, and avoids overlapping builds.
 
 With `nvim-notify`, watch mode can keep a single persistent status notification
 updated instead of emitting separate start/finish messages for every rebuild.
+Rebuilds also suppress the regular stitch/compile success messages so the watch
+status remains the main signal.
 
 ## Completion
 

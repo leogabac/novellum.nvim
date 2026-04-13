@@ -35,7 +35,7 @@ local function notify_result(prefix, result)
   require("novellum.notify").info(message)
 end
 
-local function run_stitch(root, args, callback)
+local function run_stitch(root, args, callback, opts)
   require("novellum.cli").run_plain(root, "stitch", args, function(err, result)
     if err ~= nil then
       require("novellum.notify").error(err)
@@ -44,7 +44,9 @@ local function run_stitch(root, args, callback)
       end
       return
     end
-    notify_result("Stitch complete.", result)
+    if not (opts and opts.quiet_success) then
+      notify_result("Stitch complete.", result)
+    end
     if callback then
       callback(true, result)
     end
@@ -177,7 +179,7 @@ function M.stitch(root, args)
       return
     end
 
-    require("novellum.notify").info("Use <C-x> to mark notes and <M-CR> to stitch marked notes in mini.pick.")
+    require("novellum.notify").info("Use <C-b> to mark notes and <M-CR> to stitch marked notes in mini.pick.")
     local notes, err = require("novellum.cache").get_notes(root)
     if err ~= nil then
       require("novellum.notify").error(err)
@@ -221,7 +223,7 @@ function M.stitch(root, args)
   end)
 end
 
-function M.compile(root, target, callback)
+function M.compile(root, target, callback, opts)
   local compile_target = target ~= "" and target or "stitched"
   require("novellum.cli").run_plain(root, "compile", { compile_target }, function(err, result)
     if err ~= nil then
@@ -234,14 +236,16 @@ function M.compile(root, target, callback)
       end
       return
     end
-    require("novellum.notify").info(("Compiled %s."):format(compile_target))
+    if not (opts and opts.quiet_success) then
+      require("novellum.notify").info(("Compiled %s."):format(compile_target))
+    end
     if callback then
       callback(true, result)
     end
   end)
 end
 
-function M.run_session(session, callback)
+function M.run_session(session, callback, opts)
   run_stitch(session.root, session.stitch_args, function(ok)
     if not ok then
       if callback then
@@ -254,8 +258,8 @@ function M.run_session(session, callback)
       if callback then
         callback(compiled)
       end
-    end)
-  end)
+    end, opts)
+  end, opts)
 end
 
 function M.open_pdf(root, target)

@@ -171,9 +171,10 @@ selection again.
 - debounces repeated saves
 - avoids overlapping runs by queueing one pending rebuild
 
-When `nvim-notify` is installed and wired into |vim.notify()|, watch mode can
-use a persistent status notification instead of separate transient messages for
-every rebuild.
+When `nvim-notify` is installed, watch mode can use a persistent status
+notification instead of separate transient messages for every rebuild.
+Rebuilds also suppress the usual stitch/compile success messages so the watch
+status remains the main signal.
 
 ==============================================================================
 NOTES                                                          *novellum-notes*
