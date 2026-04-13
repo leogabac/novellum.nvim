@@ -104,24 +104,6 @@ local function prompt_category(callback)
   end)
 end
 
-local function prompt_stitch_mode(callback)
-  vim.ui.select({
-    { mode = "selected", label = "Selected notes" },
-    { mode = "all", label = "All notes" },
-    { mode = "category", label = "By category" },
-  }, {
-    prompt = "Stitch mode",
-    format_item = function(item)
-      return item.label
-    end,
-  }, function(item)
-    if item == nil then
-      return
-    end
-    callback(item.mode)
-  end)
-end
-
 local function current_note_id(root, notes)
   local current_path = vim.api.nvim_buf_get_name(0)
   if current_path == "" then
@@ -170,6 +152,64 @@ local function stitch_with_metadata(root, base_args)
   end)
 end
 
+local function session_summary(session)
+  if session == nil then
+    return ""
+  end
+
+  local args = {}
+  local skip_next = false
+  for _, value in ipairs(session.stitch_args or {}) do
+    if skip_next then
+      skip_next = false
+    elseif value == "--title" or value == "--output" then
+      skip_next = true
+    else
+      table.insert(args, value)
+    end
+  end
+
+  return table.concat(args, " ")
+end
+
+local function prompt_stitch_action(root, notes, callback)
+  local items = {}
+  local active_note = current_note(root, notes)
+  if active_note ~= nil then
+    table.insert(items, {
+      mode = "current",
+      label = ("Current note: %s"):format(active_note.id),
+      note = active_note,
+    })
+  end
+
+  local session = require("novellum.build").get_session()
+  if session ~= nil and session.root == root then
+    local summary = session_summary(session)
+    table.insert(items, {
+      mode = "last",
+      label = summary ~= "" and ("Last selection: %s"):format(summary) or "Last selection",
+      session = session,
+    })
+  end
+
+  table.insert(items, { mode = "selected", label = "Pick notes" })
+  table.insert(items, { mode = "all", label = "All notes" })
+  table.insert(items, { mode = "category", label = "By category" })
+
+  vim.ui.select(items, {
+    prompt = "Stitch target",
+    format_item = function(item)
+      return item.label
+    end,
+  }, function(item)
+    if item == nil then
+      return
+    end
+    callback(item)
+  end)
+end
+
 function M.stitch(root, args)
   if args ~= nil and #args > 0 then
     record_session(root, args)
@@ -177,13 +217,30 @@ function M.stitch(root, args)
     return
   end
 
-  prompt_stitch_mode(function(mode)
-    if mode == "all" then
+  local notes, err = require("novellum.cache").get_notes(root)
+  if err ~= nil then
+    require("novellum.notify").error(err)
+    return
+  end
+
+  prompt_stitch_action(root, notes, function(item)
+    if item.mode == "current" then
+      stitch_with_metadata(root, { item.note.id })
+      return
+    end
+
+    if item.mode == "last" then
+      record_session(root, item.session.stitch_args)
+      run_stitch(root, item.session.stitch_args)
+      return
+    end
+
+    if item.mode == "all" then
       stitch_with_metadata(root, { "--all" })
       return
     end
 
-    if mode == "category" then
+    if item.mode == "category" then
       prompt_category(function(category)
         stitch_with_metadata(root, { category.flag })
       end)
@@ -191,11 +248,6 @@ function M.stitch(root, args)
     end
 
     require("novellum.notify").info("Use <C-b> to mark notes and <M-CR> to stitch marked notes in mini.pick.")
-    local notes, err = require("novellum.cache").get_notes(root)
-    if err ~= nil then
-      require("novellum.notify").error(err)
-      return
-    end
     local active_note_id = current_note_id(root, notes)
 
     require("novellum.picker").pick_notes(root, notes, {

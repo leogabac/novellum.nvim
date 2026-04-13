@@ -119,11 +119,15 @@ Neovim help is available in [doc/novellum.txt](doc/novellum.txt).
 `NovellumStitchCurrent` is the fastest path when you are editing one note and
 want to stitch that note immediately.
 
-Interactive mode currently supports:
+Interactive mode now leads with the most common choices:
 
-* selected notes
+* current note
+* last selection
+* pick notes
 * all notes
 * one category at a time
+
+Choosing `last selection` reruns the previous stitch arguments as recorded.
 
 When `mini.pick` is available:
 

@@ -63,13 +63,17 @@ COMMANDS                                                    *novellum-commands*
         the arguments are forwarded directly to the CLI.
 
         Without arguments:
-        the plugin prompts for one of three modes:
+        the plugin prompts for a stitch target, leading with the common cases:
 
-        - selected notes
+        - current note
+        - last selection
+        - pick notes
         - all notes
         - one note category
 
-        Selected-note mode uses `mini.pick` when available. Inside the picker:
+        `last selection` reruns the previous recorded stitch arguments.
+
+        Pick-notes mode uses `mini.pick` when available. Inside the picker:
 
         - `<CR>` stitches the current note
         - `<M-CR>` stitches marked notes
